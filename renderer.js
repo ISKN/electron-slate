@@ -6,7 +6,37 @@ const serialport = require('serialport')
 const createTable = require('data-table')
 
 serialport.list((err, ports) => {
-  console.log('ports', ports);
+  let port;
+  console.log('List of ports:', ports);
+  for (var i = 0; i < ports.length; i++) {
+    if (ports[i].manufacturer === "ISKN") {
+      port = new serialport(ports[i].comName, function (err) {
+        if (err) {
+          return console.log('Error: ', err.message);
+        }
+      })
+    }
+  }
+
+  // The open event is always emitted
+  port.on('open', function() {
+    console.log('Port opened');
+  });
+
+  port.on('data', function (data) {
+    console.log('Data:', data);
+  });
+
+
+  port.on('readable', function () {
+    console.log('Data:', port.read());
+  });
+
+  port.on('close', function () {
+    console.log('Port closed');
+  });
+
+
   if (err) {
     document.getElementById('error').textContent = err.message
     return
