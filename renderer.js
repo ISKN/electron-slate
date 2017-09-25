@@ -6,35 +6,34 @@ const serialport = require('serialport')
 const createTable = require('data-table')
 
 serialport.list((err, ports) => {
-  let port;
-  console.log('List of ports:', ports);
-  for (var i = 0; i < ports.length; i++) {
-    if (ports[i].manufacturer === "ISKN") {
-      port = new serialport(ports[i].comName, function (err) {
-        if (err) {
-          return console.log('Error: ', err.message);
-        }
-      })
+  if (ports.length > 0) {
+    let port;
+    console.log('List of ports:', ports);
+    for (var i = 0; i < ports.length; i++) {
+      if (ports[i].manufacturer === "ISKN") {
+        port = new serialport(ports[i].comName, {
+          baudRate: 921600
+        }, function (err) {
+          if (err) {
+            return console.log('Error: ', err.message);
+          }
+        })
+        // The open event is always emitted
+        port.on('open', function() {
+          console.log('Port opened');
+          port.write([0xB3, 0xA5, 0xE1, 0x33, 0x6A, 0x00, 0xE1, 0xE4,]);
+        });
+
+        port.on('data', function (data) {
+          console.log('Data:', data);
+        });
+
+        port.on('close', function () {
+          console.log('Port closed');
+        });
+      }
     }
   }
-
-  // The open event is always emitted
-  port.on('open', function() {
-    console.log('Port opened');
-  });
-
-  port.on('data', function (data) {
-    console.log('Data:', data);
-  });
-
-
-  port.on('readable', function () {
-    console.log('Data:', port.read());
-  });
-
-  port.on('close', function () {
-    console.log('Port closed');
-  });
 
 
   if (err) {
