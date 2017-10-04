@@ -4,6 +4,39 @@
 
 const serialport = require('serialport')
 const createTable = require('data-table')
+var Parser = require('binary-parser').Parser;
+
+var pen3DBloc = new Parser()
+    .endianess('little')
+    .array('header', {
+        type: 'uint8',
+        length: 3
+    })
+    .uint8('packetID')
+    .uint16('X')
+    .uint16('Y')
+    .uint16('Z')
+    .uint16('TimeStamp')
+    .int16('Phi')
+    .int16('Theta')
+    .uint8('Contact')
+    .array('crc', {
+        type: 'uint8',
+        length: 2
+    });
+
+  var eventBloc = new Parser()
+      .array('header', {
+          type: 'uint8',
+          length: 3
+      })
+      .uint8('packetID')
+      .uint8('eventID')
+      .uint8('eventCode')
+      .array('crc', {
+          type: 'uint8',
+          length: 2
+      });
 
 serialport.list((err, ports) => {
   if (ports.length > 0) {
@@ -25,7 +58,45 @@ serialport.list((err, ports) => {
         });
 
         port.on('data', function (data) {
-          console.log('Data:', data);
+          //console.log('Data:', data);
+          var buf = new Buffer(data, 'hex');
+          var offset = 0;
+
+          while(offset <= (buf.length - 4))
+          {
+            if((data[offset] == 0xB3) &&
+               (data[offset + 1] == 0xA5) &&
+               (data[offset + 2] == 0xE1))
+               {
+
+                  switch(data[offset + 3]){
+                   case 0x03:
+                        if(offset <= (buf.length - 8))
+                        {
+                          console.log('Data:', eventBloc.parse(buf.slice(offset)));
+                        }
+                        offset += 8;
+                     break;
+
+                   case 0x05:
+                       if(offset <= (buf.length - 19))
+                       {
+                         console.log('Data:', pen3DBloc.parse(buf.slice(offset)));
+                        //  console.log('Data - buffer:', buf.slice(offset));
+                       }
+                       offset += 19;
+                     break;
+
+                  default:
+                      offset++;
+                     break;
+                 }
+               }
+
+              else {
+                 offset++;
+               }
+          }
         });
 
         port.on('close', function () {
