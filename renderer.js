@@ -4,41 +4,9 @@
 
 const serialport = require('serialport')
 const createTable = require('data-table')
-var Parser = require('binary-parser').Parser;
+
 
 var SlateManager = require('./slatemanager.js');
-
-var pen3DBloc = new Parser()
-    .endianess('little')
-    .array('header', {
-        type: 'uint8',
-        length: 3
-    })
-    .uint8('packetID')
-    .uint16('X')
-    .uint16('Y')
-    .uint16('Z')
-    .uint16('TimeStamp')
-    .int16('Phi')
-    .int16('Theta')
-    .uint8('Contact')
-    .array('crc', {
-        type: 'uint8',
-        length: 2
-    });
-
-  var eventBloc = new Parser()
-      .array('header', {
-          type: 'uint8',
-          length: 3
-      })
-      .uint8('packetID')
-      .uint8('eventID')
-      .uint8('eventCode')
-      .array('crc', {
-          type: 'uint8',
-          length: 2
-      });
 
 serialport.list((err, ports) => {
   if (ports.length > 0) {

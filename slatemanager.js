@@ -2,6 +2,7 @@ var events = require('events');
 var EventEmitter = events.EventEmitter;
 
 const Serialport = require('serialport');
+var Parser = require('binary-parser').Parser;
 
 module.exports = class SlateManager extends EventEmitter  {
 
@@ -39,7 +40,64 @@ module.exports = class SlateManager extends EventEmitter  {
 
   parseData(data)
   {
-    console.log("new data: ", this.sub);
+    //console.log("new data: ", this.sub);
+
+    var descriptionBloc = new Parser()
+    .endianess('little')
+    .array('header', {
+        type: 'uint8',
+        length: 3
+    })
+    .int16('physWidth')
+    .int16('physHeight')
+    .int16('cliWidth')
+    .int16('cliHeight')
+    .int16('x')
+    .int16('y')
+    .array('name', {
+        type: 'uint8',
+        length: 20
+    })
+    .array('firmwareVersion', {
+        type: 'uint8',
+        length: 4
+    })
+    .array('crc', {
+        type: 'uint8',
+        length: 2
+      });
+
+    var pen3DBloc = new Parser()
+      .endianess('little')
+      .array('header', {
+          type: 'uint8',
+          length: 3
+      })
+      .uint8('packetID')
+      .uint16('X')
+      .uint16('Y')
+      .uint16('Z')
+      .uint16('TimeStamp')
+      .int16('Phi')
+      .int16('Theta')
+      .uint8('Contact')
+      .array('crc', {
+          type: 'uint8',
+          length: 2
+      });
+
+      var eventBloc = new Parser()
+          .array('header', {
+              type: 'uint8',
+              length: 3
+          })
+          .uint8('packetID')
+          .uint8('eventID')
+          .uint8('eventCode')
+          .array('crc', {
+              type: 'uint8',
+              length: 2
+          });
 
     var buf = new Buffer(data, 'hex');
     var offset = 0;
@@ -64,7 +122,6 @@ module.exports = class SlateManager extends EventEmitter  {
                  if(offset <= (buf.length - 19))
                  {
                    console.log('Data:', pen3DBloc.parse(buf.slice(offset)));
-                  //  console.log('Data - buffer:', buf.slice(offset));
                  }
                  offset += 19;
                break;
