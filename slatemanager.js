@@ -9,8 +9,6 @@ module.exports = class SlateManager extends EventEmitter  {
    constructor(comName) {
      super();
 
-    console.log("Length: ", rect.getLength());
-
     this.requestDescription = new Buffer([0xB3, 0xA5, 0xE1, 0x34, 0x02, 0x42, 0x20]);
     this.sub = new Buffer([0xB3, 0xA5, 0xE1, 0x33, 0x6A, 0x00, 0xE1, 0xE4]);
     this.serialport =  new Serialport(comName, {
